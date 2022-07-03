@@ -1,17 +1,24 @@
-"""
-Работает с этими модулями:
-
-python-telegram-bot==11.1.0
-redis==3.2.1
-"""
 import os
 import logging
 import redis
-
+import dotenv
+from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Filters, Updater
-from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
+from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext
+
+from main import fetch_api_token, get_products
 
 _database = None
+
+def make_keyboard():
+    keyboard = []
+    products = get_products(ep_api_token)
+    for product in products:
+        keyboard.append([InlineKeyboardButton(product['name'],
+                                              callback_data=product['id'])])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    return reply_markup
+
 
 def start(bot, update):
     """
@@ -20,7 +27,13 @@ def start(bot, update):
     Бот отвечает пользователю фразой "Привет!" и переводит его в состояние ECHO.
     Теперь в ответ на его команды будет запускаеться хэндлер echo.
     """
-    update.message.reply_text(text='Привет!')
+    keyboard = [[InlineKeyboardButton("Option 1", callback_data='1'),
+                InlineKeyboardButton("Option 2", callback_data='2')],
+
+                [InlineKeyboardButton("Option 3", callback_data='3')]]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Please choose:', reply_markup=reply_markup)
     return "ECHO"
 
 
@@ -36,7 +49,7 @@ def echo(bot, update):
     return "ECHO"
 
 
-def handle_users_reply(bot, update):
+def handle_users_reply(update, bot ):
     """
     Функция, которая запускается при любом сообщении от пользователя и решает как его обработать.
 
@@ -92,7 +105,13 @@ def get_database_connection():
 
 
 if __name__ == '__main__':
+    dotenv.load_dotenv()
     token = os.getenv("TELEGRAM_TOKEN")
+    ep_store = os.environ["ELASTIC_STORE_ID"]
+    ep_client = os.environ["ELASTIC_CLIENT_ID"]
+    ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
+    ep_api_token_result = fetch_api_token(ep_client, ep_secret)
+    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
     updater = Updater(token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))

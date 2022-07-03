@@ -37,7 +37,7 @@ def get_products(api_token):
     }
     response = requests.get('https://api.moltin.com/v2/products', headers=headers)
     response.raise_for_status()
-    # print(response.json())
+    return response.json()['data']
 
 
 def get_cart(api_token):
@@ -59,7 +59,7 @@ def main():
     ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
     api_token_result = fetch_api_token(ep_client, ep_secret)
     api_token = f"{api_token_result['token_type']} {api_token_result['access_token']}"
-    # get_products(api_token)
+    get_products(api_token)
     # add_to_cart(api_token)
     # get_cart(api_token)
 
