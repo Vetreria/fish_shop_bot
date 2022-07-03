@@ -2,12 +2,11 @@ import os
 import logging
 import redis
 import dotenv
-from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Filters, Updater
-from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
 
 
-from main import fetch_api_token, get_products, get_product
+from main import fetch_api_token, get_products, get_product, get_image_url
 
 
 _database = None
@@ -23,12 +22,12 @@ def make_keyboard():
     return reply_markup
 
 
-def start(bot, update):
+def start(update, context):
     update.message.reply_text('Каталог:', reply_markup=make_keyboard())
     return "HANDLE_MENU"
 
 
-def handle_menu(bot, update):
+def handle_menu(update, context):
     query = update.callback_query
     product = get_product(ep_api_token, query.data)
     text = f"""Карточка товара: {product['name']}
@@ -36,12 +35,18 @@ def handle_menu(bot, update):
         Цена: {product['meta']['display_price']['with_tax']['formatted']}
         Наличие: {product['meta']['stock']['level']} шт.
         """
-    update.callback_query.message.edit_text(text)
-
+    image_id = product['relationships']['main_image']['data']['id']
+    image_url = get_image_url(ep_api_token, image_id)
+    context.bot.send_photo(
+            chat_id=query.message.chat_id,
+            photo=image_url, caption = text
+    )
+    context.bot.delete_message(chat_id=query.message.chat_id,
+                           message_id=query.message.message_id)
     return "START"
 
 
-def handle_users_reply(update, bot ):
+def handle_users_reply(update, context):
     db = get_database_connection()
     if update.message:
         user_reply = update.message.text
@@ -65,7 +70,7 @@ def handle_users_reply(update, bot ):
     # Оставляю этот try...except, чтобы код не падал молча.
     # Этот фрагмент можно переписать.
     try:
-        next_state = state_handler(bot, update)
+        next_state = state_handler(update, context)
         db.set(chat_id, next_state)
     except Exception as err:
         print(err)

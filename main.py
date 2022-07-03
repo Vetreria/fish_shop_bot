@@ -3,6 +3,15 @@ import json
 import requests
 import dotenv
 
+
+def get_image_url(ep_api_token, image_id):
+    headers = {
+    'Authorization': ep_api_token,
+    }
+    response = requests.get(f'https://api.moltin.com/v2/files/{image_id}', headers=headers)
+    response.raise_for_status()
+    return response.json()['data']['link']['href']
+
 def fetch_api_token(ep_client, ep_secret):
     data = {
     'client_id': ep_client,
