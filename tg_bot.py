@@ -7,7 +7,7 @@ from telegram.ext import Filters, Updater
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext
 
 
-from main import fetch_api_token, get_products
+from main import fetch_api_token, get_products, get_product
 
 
 _database = None
@@ -25,13 +25,20 @@ def make_keyboard():
 
 def start(bot, update):
     update.message.reply_text('Каталог:', reply_markup=make_keyboard())
-    return "ECHO"
+    return "HANDLE_MENU"
 
 
-def echo(bot, update):
-    users_reply = update.message.text
-    update.message.reply_text(users_reply)
-    return "ECHO"
+def handle_menu(bot, update):
+    query = update.callback_query
+    product = get_product(ep_api_token, query.data)
+    text = f"""Карточка товара: {product['name']}
+        Описание: {product['description']}
+        Цена: {product['meta']['display_price']['with_tax']['formatted']}
+        Наличие: {product['meta']['stock']['level']} шт.
+        """
+    update.callback_query.message.edit_text(text)
+
+    return "START"
 
 
 def handle_users_reply(update, bot ):
@@ -51,7 +58,7 @@ def handle_users_reply(update, bot ):
     
     states_functions = {
         'START': start,
-        'ECHO': echo
+        'HANDLE_MENU': handle_menu
     }
     state_handler = states_functions[user_state]
     # Если вы вдруг не заметите, что python-telegram-bot перехватывает ошибки.

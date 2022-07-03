@@ -14,9 +14,9 @@ def fetch_api_token(ep_client, ep_secret):
     return response.json()
 
 
-def add_to_cart(api_token, item_id = 'd96a36df-06d3-4e90-a3f6-b8860ad81256', count = 1):
+def add_to_cart(ep_api_token, item_id = 'd96a36df-06d3-4e90-a3f6-b8860ad81256', count = 1):
     headers = {
-    'Authorization': api_token,
+    'Authorization': ep_api_token,
     }
 
     json_data = {
@@ -31,18 +31,28 @@ def add_to_cart(api_token, item_id = 'd96a36df-06d3-4e90-a3f6-b8860ad81256', cou
     print(response.json())
 
 
-def get_products(api_token):
+def get_products(ep_api_token):
     headers = {
-    'Authorization': api_token,
+    'Authorization': ep_api_token,
     }
     response = requests.get('https://api.moltin.com/v2/products', headers=headers)
     response.raise_for_status()
     return response.json()['data']
 
 
-def get_cart(api_token):
+def get_product(ep_api_token,product_id):
     headers = {
-    'Authorization': api_token,
+    'Authorization': ep_api_token,
+    }
+    response = requests.get(f'https://api.moltin.com/v2/products/{product_id}',
+                            headers=headers)
+    response.raise_for_status()
+    return response.json()['data']
+
+
+def get_cart(ep_api_token):
+    headers = {
+    'Authorization': ep_api_token,
     }
     response = requests.get('https://api.moltin.com/v2/carts/:reference', headers=headers)
     response.raise_for_status()
@@ -57,9 +67,9 @@ def main():
     ep_store = os.environ["ELASTIC_STORE_ID"]
     ep_client = os.environ["ELASTIC_CLIENT_ID"]
     ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
-    api_token_result = fetch_api_token(ep_client, ep_secret)
-    api_token = f"{api_token_result['token_type']} {api_token_result['access_token']}"
-    get_products(api_token)
+    ep_api_token_result = fetch_api_token(ep_client, ep_secret)
+    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
+    # get_products(ep_api_token)
     # add_to_cart(api_token)
     # get_cart(api_token)
 
