@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
 
 
-from main import fetch_api_token, get_products, get_product, get_image_url
+from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart
 
 
 _database = None
@@ -27,6 +27,28 @@ def start(update, context):
     return "HANDLE_MENU"
 
 
+def handle_description(update, context):
+    query = update.callback_query
+
+    if query.data == 'back_to_menu':
+        context.bot.send_message(
+            text='Каталог:',
+            chat_id=query.message.chat_id,
+            reply_markup=make_keyboard(),
+        )
+        context.bot.delete_message(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        return 'HANDLE_MENU'
+    else:
+        quantity, item_id = query.data.split('|')
+        print(quantity, item_id)
+        cart_id = query.message.chat.id
+        print(add_to_cart(ep_api_token, item_id, quantity, cart_id))
+        return 'HANDLE_DESCRIPTION'
+
+
 def handle_menu(update, context):
     query = update.callback_query
     product = get_product(ep_api_token, query.data)
@@ -36,14 +58,22 @@ def handle_menu(update, context):
         Наличие: {product['meta']['stock']['level']} шт.
         """
     image_id = product['relationships']['main_image']['data']['id']
+    keyboard = [ 
+        [InlineKeyboardButton('1 шт', callback_data=f'1|{query.data}'),
+         InlineKeyboardButton('5 шт', callback_data=f'5|{query.data}'),
+         InlineKeyboardButton('10 шт', callback_data=f'10|{query.data}')],
+        [InlineKeyboardButton('Назад', callback_data='back_to_menu')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     image_url = get_image_url(ep_api_token, image_id)
     context.bot.send_photo(
             chat_id=query.message.chat_id,
-            photo=image_url, caption = text
+            photo=image_url, caption = text,
+            reply_markup=reply_markup
     )
+    
     context.bot.delete_message(chat_id=query.message.chat_id,
                            message_id=query.message.message_id)
-    return "START"
+    return "HANDLE_DESCRIPTION"
 
 
 def handle_users_reply(update, context):
@@ -63,7 +93,8 @@ def handle_users_reply(update, context):
     
     states_functions = {
         'START': start,
-        'HANDLE_MENU': handle_menu
+        'HANDLE_MENU': handle_menu,
+        'HANDLE_DESCRIPTION': handle_description
     }
     state_handler = states_functions[user_state]
     # Если вы вдруг не заметите, что python-telegram-bot перехватывает ошибки.

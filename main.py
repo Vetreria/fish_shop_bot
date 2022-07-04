@@ -23,21 +23,22 @@ def fetch_api_token(ep_client, ep_secret):
     return response.json()
 
 
-def add_to_cart(ep_api_token, item_id = 'd96a36df-06d3-4e90-a3f6-b8860ad81256', count = 1):
+def add_to_cart(ep_api_token, item_id='0ba915a9-15fe-4261-9cc2-7f1fafd1438f', quantity='5', cart_id='289002563'):
     headers = {
     'Authorization': ep_api_token,
+    'Content-Type': 'application/json',
     }
 
-    json_data = {
+    payload = {
         'data': {
         'id': item_id,
         'type': 'cart_item',
-        'quantity': count,
+        'quantity': quantity,
             },
     }
-    response = requests.post('https://api.moltin.com/v2/carts/:reference/items', headers=headers, json=json_data)
+    response = requests.post(f'https://api.moltin.com/v2/carts/:reference/items', headers=headers, json=payload)
     response.raise_for_status()
-    print(response.json())
+    return response.json()['data']
 
 
 def get_products(ep_api_token):
@@ -66,6 +67,7 @@ def get_cart(ep_api_token):
     response = requests.get('https://api.moltin.com/v2/carts/:reference', headers=headers)
     response.raise_for_status()
     print(response.json())
+    return response.json()
 
 
 
@@ -78,9 +80,10 @@ def main():
     ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
     ep_api_token_result = fetch_api_token(ep_client, ep_secret)
     ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
+    print(ep_api_token)
     # get_products(ep_api_token)
-    # add_to_cart(api_token)
-    # get_cart(api_token)
+    add_to_cart(ep_api_token)
+    # get_cart(ep_api_token)
 
 
 
