@@ -43,9 +43,9 @@ def handle_description(update, context):
         return 'HANDLE_MENU'
     else:
         quantity, item_id = query.data.split('|')
-        print(quantity, item_id)
+        # print(quantity, item_id)
         cart_id = query.message.chat.id
-        print(add_to_cart(ep_api_token, item_id, quantity, cart_id))
+        add_to_cart(ep_api_token, item_id, quantity, cart_id)
         return 'HANDLE_DESCRIPTION'
 
 
@@ -62,7 +62,9 @@ def handle_menu(update, context):
         [InlineKeyboardButton('1 шт', callback_data=f'1|{query.data}'),
          InlineKeyboardButton('5 шт', callback_data=f'5|{query.data}'),
          InlineKeyboardButton('10 шт', callback_data=f'10|{query.data}')],
-        [InlineKeyboardButton('Назад', callback_data='back_to_menu')]]
+        [InlineKeyboardButton('Назад', callback_data='back_to_menu'),
+        InlineKeyboardButton('Корзина', callback_data='cart')
+        ]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     image_url = get_image_url(ep_api_token, image_id)
     context.bot.send_photo(

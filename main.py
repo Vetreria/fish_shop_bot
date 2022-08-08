@@ -23,7 +23,7 @@ def fetch_api_token(ep_client, ep_secret):
     return response.json()
 
 
-def add_to_cart(ep_api_token, item_id='0ba915a9-15fe-4261-9cc2-7f1fafd1438f', quantity='5', cart_id='289002563'):
+def add_to_cart(ep_api_token, item_id, quantity, cart_id):
     headers = {
     'Authorization': ep_api_token,
     'Content-Type': 'application/json',
@@ -33,12 +33,25 @@ def add_to_cart(ep_api_token, item_id='0ba915a9-15fe-4261-9cc2-7f1fafd1438f', qu
         'data': {
         'id': item_id,
         'type': 'cart_item',
-        'quantity': quantity,
-            },
-    }
-    response = requests.post(f'https://api.moltin.com/v2/carts/:reference/items', headers=headers, json=payload)
+        'quantity': int(quantity)}}
+    url = f'https://api.moltin.com/v2/carts/:{cart_id}/items'
+    print (url, headers, payload )
+    response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
+    get_products_in_cart(ep_api_token, cart_id)
     return response.json()['data']
+
+
+def get_products_in_cart(ep_api_token, cart_id):
+    headers = {
+    'Authorization': ep_api_token,
+    'Content-Type': 'application/json',
+    }
+    url = f'https://api.moltin.com/v2/carts/:{cart_id}/items'
+
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    print(response.json())
 
 
 def get_products(ep_api_token):
