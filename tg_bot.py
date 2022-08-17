@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
 
 
-from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart
+from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item
 
 
 _database = None
@@ -55,9 +55,9 @@ def handle_cart(update, context):
     cart_id = update.effective_chat.id
     all_carts_items = get_products_in_cart(ep_api_token, cart_id)
     total_cart = get_cart(ep_api_token, cart_id)
-    print(all_carts_items)
-    print(total_cart)
-    # keyboard = []
+    # print(all_carts_items)
+    # print(total_cart)
+    keyboard = []
     # print(all_carts_items)
     cart_text = ''
     if query.data == 'cart':
@@ -72,24 +72,36 @@ def handle_cart(update, context):
         """
             cart_text += text
             # print(product['name'])
-        #     keyboard.append(
-        #         [InlineKeyboardButton(
-        #             f'убрать из корзины {name}', callback_data=product_id)])
-        # keyboard.append(
-        #     [InlineKeyboardButton('В главное меню', callback_data='back')])
+            keyboard.append(
+                [InlineKeyboardButton(f'''убрать из корзины {product['name']}''', callback_data=product['id'])]
+                )
+        keyboard.append(
+            [InlineKeyboardButton('В главное меню', callback_data='back_to_menu')])
         # keyboard.append(
         #     [InlineKeyboardButton('оплатить', callback_data='payment')])
         
-        # reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
         cart_text += f'''Итог: {total_cart['data']['meta']['display_price']['with_tax']['formatted']}'''
         context.bot.send_message(
         chat_id=cart_id,
         text=cart_text,
-            # reply_markup=reply_markup,
+        reply_markup=reply_markup,
         )
-    elif query.data == 'back':
-        handle_menu(update, context)
+    elif query.data == 'back_to_menu':
+        context.bot.send_message(
+            text='Каталог:',
+            chat_id=query.message.chat_id,
+            reply_markup=make_keyboard(),
+        )
+        context.bot.delete_message(
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        return 'HANDLE_MENU'
+    else:
+        delete_cart_item(ep_api_token, cart_id, product_id=query.data)
         return 'HANDLE_CART'
+        
 
 
 def handle_description(update, context):

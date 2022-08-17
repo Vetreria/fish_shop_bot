@@ -51,7 +51,7 @@ def get_products_in_cart(ep_api_token, cart_id):
 
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    # print(response.json()['data'])
+    print(response.json()['data'])
     return response.json()['data']
 
 
@@ -83,8 +83,16 @@ def get_cart(ep_api_token, cart_id):
     # print(response.json())
     return response.json()
 
-
-
+def delete_cart_item(ep_api_token, cart_id, product_id):
+    headers = {
+    'Authorization': ep_api_token,
+    }
+    # print(headers)
+    url = f"https://api.moltin.com/v2/carts/:{cart_id}/items/{product_id}"
+    print(headers, url)
+    response = requests.delete(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
 
 
 def main():
