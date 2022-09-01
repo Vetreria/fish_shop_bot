@@ -4,10 +4,7 @@ import redis
 import dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
-
-
 from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item
-
 
 _database = None
 
@@ -25,29 +22,6 @@ def make_keyboard():
 def start(update, context):
     update.message.reply_text('Каталог:', reply_markup=make_keyboard())
     return "HANDLE_MENU"
-
-
-# def get_cart_details(update, context):
-#     all_carts_items = ''
-#     cart_names = list()
-#     chat_id = update.effective_chat.id
-#     cart_products = get_products_in_cart(ep_api_token, cart_id=chat_id)
-#     total_in_card = get_cart(ep_api_token, cart_id=chat_id)
-
-#     for cart_item in cart_products['data']:
-#         display_price = cart_item['meta']['display_price']['with_tax']
-#         cart_names.append((cart_item['name'], cart_item['id']))
-#         text = textwrap.dedent(
-#             f"""\
-#                     {cart_item['name']}
-#                     {cart_item['description']}
-#                     {display_price['unit']['formatted']} per kg
-#                     {cart_item['quantity']} kg in cart for {display_price['value']['formatted']}
-#                     """)
-#         all_carts_items += text + '\n'
-#     all_carts_items += 'Total: ' + str(
-#         total_in_card['data']['meta']['display_price']['with_tax']['formatted'])
-#     return all_carts_items, cart_names
 
 
 def handle_cart(update, context):
@@ -77,8 +51,8 @@ def handle_cart(update, context):
                 )
         keyboard.append(
             [InlineKeyboardButton('В главное меню', callback_data='back_to_menu')])
-        # keyboard.append(
-        #     [InlineKeyboardButton('оплатить', callback_data='payment')])
+        keyboard.append(
+            [InlineKeyboardButton('оплатить', callback_data='payment')])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         cart_text += f'''Итог: {total_cart['data']['meta']['display_price']['with_tax']['formatted']}'''
@@ -98,11 +72,15 @@ def handle_cart(update, context):
             message_id=query.message.message_id,
         )
         return 'HANDLE_MENU'
+    elif query.data == 'payment':
+        context.bot.send_message(
+            chat_id=query.message.chat_id,
+            text='Введите адрес электронной почты:',)
+        return 'WAITING_EMAIL'
     else:
         delete_cart_item(ep_api_token, cart_id, product_id=query.data)
         return 'HANDLE_CART'
         
-
 
 def handle_description(update, context):
     query = update.callback_query
@@ -178,17 +156,27 @@ def handle_users_reply(update, context):
         'START': start,
         'HANDLE_MENU': handle_menu,
         'HANDLE_CART': handle_cart,
-        'HANDLE_DESCRIPTION': handle_description
+        'HANDLE_DESCRIPTION': handle_description,
+        'WAITING_EMAIL':  waiting_email,
     }
     state_handler = states_functions[user_state]
-    # Если вы вдруг не заметите, что python-telegram-bot перехватывает ошибки.
-    # Оставляю этот try...except, чтобы код не падал молча.
-    # Этот фрагмент можно переписать.
     try:
         next_state = state_handler(update, context)
         db.set(chat_id, next_state)
     except Exception as err:
         print(err)
+
+
+def waiting_email(update, context):
+    user_email = update.message.text
+    chat_id = update.message.chat_id
+    text = f'''
+        Вы ввели адрес электронной почты: {user_email}
+        Ждите письмо из Хогвардса!'''
+    context.bot.send_message(
+            chat_id=chat_id,
+            text=text,)
+
 
 def get_database_connection():
     global _database
