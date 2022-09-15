@@ -51,7 +51,7 @@ def get_products_in_cart(ep_api_token, cart_id):
 
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    print(response.json()['data'])
+    # print(response.json()['data'])
     return response.json()['data']
 
 
@@ -89,10 +89,41 @@ def delete_cart_item(ep_api_token, cart_id, product_id):
     }
     # print(headers)
     url = f"https://api.moltin.com/v2/carts/:{cart_id}/items/{product_id}"
-    print(headers, url)
+    # print(headers, url)
     response = requests.delete(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+
+def create_customer(ep_api_token, user_name, user_email):
+    headers = {
+    'Authorization': ep_api_token,
+    }
+    url = "https://api.moltin.com/v2/customers"
+    payload = {
+        "data": {
+            "type": "customer",
+            "name": user_name,
+            "email": user_email}}
+
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    # print(response.json())
+    user_id = response.json()['data']['id']
+    print(f"hello  {str(get_customer(ep_api_token, user_id))}")
+    return response.json()
+
+
+def get_customer(ep_api_token, user_id):
+    headers = {
+    'Authorization': ep_api_token,
+    }
+    url = f"https://api.moltin.com/v2/customers/{user_id}"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return (response.json()['data'])
+
+    
 
 
 def main():

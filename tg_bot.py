@@ -4,7 +4,7 @@ import redis
 import dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
-from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item
+from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item, create_customer
 
 _database = None
 
@@ -176,6 +176,7 @@ def waiting_email(update, context):
     context.bot.send_message(
             chat_id=chat_id,
             text=text,)
+    create_customer(ep_api_token, str(chat_id), user_email)
 
 
 def get_database_connection():
