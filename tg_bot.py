@@ -29,10 +29,7 @@ def handle_cart(update, context):
     cart_id = update.effective_chat.id
     all_carts_items = get_products_in_cart(ep_api_token, cart_id)
     total_cart = get_cart(ep_api_token, cart_id)
-    # print(all_carts_items)
-    # print(total_cart)
     keyboard = []
-    # print(all_carts_items)
     cart_text = ''
     if query.data == 'cart':
         for product in all_carts_items:
@@ -45,21 +42,21 @@ def handle_cart(update, context):
         *****
         """
             cart_text += text
-            # print(product['name'])
             keyboard.append(
-                [InlineKeyboardButton(f'''убрать из корзины {product['name']}''', callback_data=product['id'])]
-                )
+                [InlineKeyboardButton(
+                    f'''убрать из корзины {product['name']}''', callback_data=product['id'])]
+            )
         keyboard.append(
             [InlineKeyboardButton('В главное меню', callback_data='back_to_menu')])
         keyboard.append(
             [InlineKeyboardButton('оплатить', callback_data='payment')])
-        
+
         reply_markup = InlineKeyboardMarkup(keyboard)
         cart_text += f'''Итог: {total_cart['data']['meta']['display_price']['with_tax']['formatted']}'''
         context.bot.send_message(
-        chat_id=cart_id,
-        text=cart_text,
-        reply_markup=reply_markup,
+            chat_id=cart_id,
+            text=cart_text,
+            reply_markup=reply_markup,
         )
     elif query.data == 'back_to_menu':
         context.bot.send_message(
@@ -80,11 +77,10 @@ def handle_cart(update, context):
     else:
         delete_cart_item(ep_api_token, cart_id, product_id=query.data)
         return 'HANDLE_CART'
-        
+
 
 def handle_description(update, context):
     query = update.callback_query
-
     if query.data == 'back_to_menu':
         context.bot.send_message(
             text='Каталог:',
@@ -99,10 +95,8 @@ def handle_description(update, context):
     elif query.data == 'cart':
         handle_cart(update, context)
         return 'HANDLE_CART'
-
     else:
         quantity, item_id = query.data.split('|')
-        # print(quantity, item_id)
         cart_id = query.message.chat.id
         add_to_cart(ep_api_token, item_id, quantity, cart_id)
         return 'HANDLE_DESCRIPTION'
@@ -117,23 +111,23 @@ def handle_menu(update, context):
         Наличие: {product['meta']['stock']['level']} шт.
         """
     image_id = product['relationships']['main_image']['data']['id']
-    keyboard = [ 
+    keyboard = [
         [InlineKeyboardButton('1 шт', callback_data=f'1|{query.data}'),
          InlineKeyboardButton('5 шт', callback_data=f'5|{query.data}'),
          InlineKeyboardButton('10 шт', callback_data=f'10|{query.data}')],
         [InlineKeyboardButton('Назад', callback_data='back_to_menu'),
-        InlineKeyboardButton('Корзина', callback_data='cart')
-        ]]
+         InlineKeyboardButton('Корзина', callback_data='cart')
+         ]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     image_url = get_image_url(ep_api_token, image_id)
     context.bot.send_photo(
-            chat_id=query.message.chat_id,
-            photo=image_url, caption = text,
-            reply_markup=reply_markup
+        chat_id=query.message.chat_id,
+        photo=image_url, caption=text,
+        reply_markup=reply_markup
     )
-    
+
     context.bot.delete_message(chat_id=query.message.chat_id,
-                           message_id=query.message.message_id)
+                               message_id=query.message.message_id)
     return "HANDLE_DESCRIPTION"
 
 
@@ -151,7 +145,7 @@ def handle_users_reply(update, context):
         user_state = 'START'
     else:
         user_state = db.get(chat_id).decode("utf-8")
-    
+
     states_functions = {
         'START': start,
         'HANDLE_MENU': handle_menu,
@@ -174,8 +168,8 @@ def waiting_email(update, context):
         Вы ввели адрес электронной почты: {user_email}
         Ждите письмо из Хогвардса!'''
     context.bot.send_message(
-            chat_id=chat_id,
-            text=text,)
+        chat_id=chat_id,
+        text=text,)
     create_customer(ep_api_token, str(chat_id), user_email)
 
 
@@ -185,7 +179,8 @@ def get_database_connection():
         database_password = os.getenv("DATABASE_PASSWORD")
         database_host = os.getenv("DATABASE_HOST")
         database_port = os.getenv("DATABASE_PORT")
-        _database = redis.Redis(host=database_host, port=database_port, password=database_password)
+        _database = redis.Redis(
+            host=database_host, port=database_port, password=database_password)
     return _database
 
 
