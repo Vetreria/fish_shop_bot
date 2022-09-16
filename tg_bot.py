@@ -6,6 +6,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
 from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item, create_customer
 
+
+from logger import set_logger
+logger = logging.getLogger(__name__)
+
 _database = None
 
 
@@ -169,8 +173,8 @@ def waiting_email(update, context):
         Ждите письмо из Хогвардса!'''
     context.bot.send_message(
         chat_id=chat_id,
-        text=text,)
-    create_customer(ep_api_token, str(chat_id), user_email)
+        text=text,)    
+    logger.info(f"Создан пользователь: {create_customer(ep_api_token, str(chat_id), user_email)}")
 
 
 def get_database_connection():
@@ -186,10 +190,16 @@ def get_database_connection():
 
 if __name__ == '__main__':
     dotenv.load_dotenv()
-    token = os.getenv("TELEGRAM_TOKEN")
+    log_tg_bot = os.environ["LOG_BOT_TOKEN"]
+    chat_id = os.environ["LOG_CHAT_TG"]
+    token = os.environ["TELEGRAM_TOKEN"]
     ep_store = os.environ["ELASTIC_STORE_ID"]
     ep_client = os.environ["ELASTIC_CLIENT_ID"]
     ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
+    
+    set_logger(logger, log_tg_bot, chat_id)
+    logger.warning("Бот запустился")
+
     ep_api_token_result = fetch_api_token(ep_client, ep_secret)
     ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
     updater = Updater(token)
@@ -198,3 +208,5 @@ if __name__ == '__main__':
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply))
     dispatcher.add_handler(CommandHandler('start', handle_users_reply))
     updater.start_polling()
+    updater.idle()
+    logger.warning("Бот закрылся")

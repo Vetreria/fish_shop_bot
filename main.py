@@ -1,5 +1,4 @@
 import os
-import json
 import requests
 import dotenv
 
@@ -106,7 +105,11 @@ def create_customer(ep_api_token, user_name, user_email):
             "email": user_email}}
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
-    return response.json()
+    return (f""" 
+    ID: {response.json()['data']['id']}
+    Name(tg_chat): {response.json()['data']['name']}
+    email: {response.json()['data']['email']}
+    """)
 
 
 def main():
