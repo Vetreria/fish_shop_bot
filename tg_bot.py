@@ -2,9 +2,10 @@ import os
 import logging
 import redis
 import dotenv
+import textwrap
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, CallbackContext, Filters, Updater
-from main import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item, create_customer
+from store import fetch_api_token, get_products, get_product, get_image_url, add_to_cart, get_cart, get_products_in_cart, delete_cart_item, create_customer
 
 
 from logger import set_logger
@@ -15,7 +16,7 @@ _database = None
 
 def make_products_keyboard():
     keyboard = []
-    products = get_products()
+    products = get_products(ep_api_token)
     for product in products:
         keyboard.append([InlineKeyboardButton(product['name'],
                                               callback_data=product['id'])])
@@ -38,14 +39,15 @@ def handle_cart(update, context):
     cart_text = ''
     if query.data == 'cart':
         for product in all_cart_items:
-            text = f"""В корзине: 
+            text = textwrap.dedent(
+                f"""В корзине: 
         {product['name']}
         Описание: {product['description']}
         Цена: {product['meta']['display_price']['with_tax']['unit']['formatted']} 
         Колличество: {product['quantity']}
         Сумма: {product['meta']['display_price']['with_tax']['value']['formatted']}  
         *****
-        """
+        """)
             cart_text += text
             keyboard.append(
                 [InlineKeyboardButton(
@@ -182,11 +184,13 @@ def waiting_email(update, context):
 def get_database_connection():
     global _database
     if _database is None:
-        database_password = os.getenv("DATABASE_PASSWORD")
+        # database_password = os.getenv("DATABASE_PASSWORD")
         database_host = os.getenv("DATABASE_HOST")
         database_port = os.getenv("DATABASE_PORT")
         _database = redis.Redis(
-            host=database_host, port=database_port, password=database_password)
+            host=database_host, port=database_port,
+            #  password=database_password
+        )
     return _database
 
 
