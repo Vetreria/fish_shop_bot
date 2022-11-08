@@ -22,6 +22,7 @@ def fetch_api_token(ep_client, ep_secret):
     response = requests.post(
         'https://api.moltin.com/oauth/access_token', data=data)
     response.raise_for_status()
+    print(response.json())
     return response.json()
 
 

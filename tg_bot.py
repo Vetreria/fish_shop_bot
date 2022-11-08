@@ -1,4 +1,5 @@
 import os
+from functools import partial
 import logging
 import redis
 import dotenv
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 _database = None
 
 
-def make_products_keyboard():
+def make_products_keyboard(ep_api_token):
     keyboard = []
     products = get_products(ep_api_token)
     for product in products:
@@ -30,7 +31,7 @@ def start(update, context):
     return "HANDLE_MENU"
 
 
-def handle_cart(update, context):
+def handle_cart(update, context, ep_api_token):
     query = update.callback_query
     cart_id = update.effective_chat.id
     all_cart_items = get_products_in_cart(ep_api_token, cart_id)
@@ -86,7 +87,7 @@ def handle_cart(update, context):
         return 'HANDLE_CART'
 
 
-def handle_description(update, context):
+def handle_description(update, context, ep_api_token):
     query = update.callback_query
     if query.data == 'back_to_menu':
         context.bot.send_message(
@@ -140,6 +141,7 @@ def handle_menu(update, context):
 
 def handle_users_reply(update, context):
     db = get_database_connection()
+    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -154,11 +156,11 @@ def handle_users_reply(update, context):
         user_state = db.get(chat_id).decode("utf-8")
 
     states_functions = {
-        'START': start,
-        'HANDLE_MENU': handle_menu,
-        'HANDLE_CART': handle_cart,
-        'HANDLE_DESCRIPTION': handle_description,
-        'WAITING_EMAIL':  waiting_email,
+        'START': partial(start, ep_api_token = ep_api_token),
+        'HANDLE_MENU': partial(handle_menu, ep_api_token = ep_api_token),
+        'HANDLE_CART': partial(handle_cart, ep_api_token = ep_api_token),
+        'HANDLE_DESCRIPTION': partial(handle_description, ep_api_token = ep_api_token),
+        'WAITING_EMAIL':  partial(waiting_email, ep_api_token = ep_api_token),
     }
     state_handler = states_functions[user_state]
     try:
