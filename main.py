@@ -38,7 +38,6 @@ def add_to_cart(ep_api_token, item_id, quantity, cart_id):
     url = f'https://api.moltin.com/v2/carts/:{cart_id}/items'
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
-    get_products_in_cart(ep_api_token, cart_id)
     return response.json()['data']
 
 

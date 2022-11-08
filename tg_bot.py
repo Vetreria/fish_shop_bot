@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 _database = None
 
 
-def make_keyboard():
+def make_products_keyboard():
     keyboard = []
-    products = get_products(ep_api_token)
+    products = get_products()
     for product in products:
         keyboard.append([InlineKeyboardButton(product['name'],
                                               callback_data=product['id'])])
@@ -24,19 +24,20 @@ def make_keyboard():
 
 
 def start(update, context):
-    update.message.reply_text('Каталог:', reply_markup=make_keyboard())
+    update.message.reply_text(
+        'Каталог:', reply_markup=make_products_keyboard())
     return "HANDLE_MENU"
 
 
 def handle_cart(update, context):
     query = update.callback_query
     cart_id = update.effective_chat.id
-    all_carts_items = get_products_in_cart(ep_api_token, cart_id)
+    all_cart_items = get_products_in_cart(ep_api_token, cart_id)
     total_cart = get_cart(ep_api_token, cart_id)
     keyboard = []
     cart_text = ''
     if query.data == 'cart':
-        for product in all_carts_items:
+        for product in all_cart_items:
             text = f"""В корзине: 
         {product['name']}
         Описание: {product['description']}
@@ -66,7 +67,7 @@ def handle_cart(update, context):
         context.bot.send_message(
             text='Каталог:',
             chat_id=query.message.chat_id,
-            reply_markup=make_keyboard(),
+            reply_markup=make_products_keyboard(),
         )
         context.bot.delete_message(
             chat_id=query.message.chat_id,
@@ -89,7 +90,7 @@ def handle_description(update, context):
         context.bot.send_message(
             text='Каталог:',
             chat_id=query.message.chat_id,
-            reply_markup=make_keyboard(),
+            reply_markup=make_products_keyboard(),
         )
         context.bot.delete_message(
             chat_id=query.message.chat_id,
@@ -173,8 +174,9 @@ def waiting_email(update, context):
         Ждите письмо из Хогвардса!'''
     context.bot.send_message(
         chat_id=chat_id,
-        text=text,)    
-    logger.info(f"Создан пользователь: {create_customer(ep_api_token, str(chat_id), user_email)}")
+        text=text,)
+    logger.info(
+        f"Создан пользователь: {create_customer(ep_api_token, str(chat_id), user_email)}")
 
 
 def get_database_connection():
@@ -196,7 +198,7 @@ if __name__ == '__main__':
     ep_store = os.environ["ELASTIC_STORE_ID"]
     ep_client = os.environ["ELASTIC_CLIENT_ID"]
     ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
-    
+
     set_logger(logger, log_tg_bot, chat_id)
     logger.warning("Бот запустился")
 
