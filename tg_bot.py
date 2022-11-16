@@ -25,9 +25,9 @@ def make_products_keyboard(ep_api_token):
     return reply_markup
 
 
-def start(update, context):
+def start(update, context, ep_api_token):
     update.message.reply_text(
-        'Каталог:', reply_markup=make_products_keyboard())
+        'Каталог:', reply_markup=make_products_keyboard(ep_api_token))
     return "HANDLE_MENU"
 
 
@@ -70,7 +70,7 @@ def handle_cart(update, context, ep_api_token):
         context.bot.send_message(
             text='Каталог:',
             chat_id=query.message.chat_id,
-            reply_markup=make_products_keyboard(),
+            reply_markup=make_products_keyboard(ep_api_token),
         )
         context.bot.delete_message(
             chat_id=query.message.chat_id,
@@ -93,7 +93,7 @@ def handle_description(update, context, ep_api_token):
         context.bot.send_message(
             text='Каталог:',
             chat_id=query.message.chat_id,
-            reply_markup=make_products_keyboard(),
+            reply_markup=make_products_keyboard(ep_api_token),
         )
         context.bot.delete_message(
             chat_id=query.message.chat_id,
@@ -101,7 +101,7 @@ def handle_description(update, context, ep_api_token):
         )
         return 'HANDLE_MENU'
     elif query.data == 'cart':
-        handle_cart(update, context)
+        handle_cart(update, context, ep_api_token)
         return 'HANDLE_CART'
     else:
         quantity, item_id = query.data.split('|')
@@ -110,7 +110,7 @@ def handle_description(update, context, ep_api_token):
         return 'HANDLE_DESCRIPTION'
 
 
-def handle_menu(update, context):
+def handle_menu(update, context, ep_api_token):
     query = update.callback_query
     product = get_product(ep_api_token, query.data)
     text = f"""Карточка товара: {product['name']}
@@ -170,7 +170,7 @@ def handle_users_reply(update, context):
         print(err)
 
 
-def waiting_email(update, context):
+def waiting_email(update, context, ep_api_token):
     user_email = update.message.text
     chat_id = update.message.chat_id
     text = f'''
