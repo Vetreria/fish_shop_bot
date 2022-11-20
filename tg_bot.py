@@ -158,11 +158,11 @@ def handle_users_reply(update, context):
         user_state = db.get(chat_id).decode("utf-8")
 
     states_functions = {
-        'START': partial(start, ep_api_token = ep_api_token),
-        'HANDLE_MENU': partial(handle_menu, ep_api_token = ep_api_token),
-        'HANDLE_CART': partial(handle_cart, ep_api_token = ep_api_token),
-        'HANDLE_DESCRIPTION': partial(handle_description, ep_api_token = ep_api_token),
-        'WAITING_EMAIL':  partial(waiting_email, ep_api_token = ep_api_token),
+        'START': partial(start, ep_api_token=ep_api_token),
+        'HANDLE_MENU': partial(handle_menu, ep_api_token=ep_api_token),
+        'HANDLE_CART': partial(handle_cart, ep_api_token=ep_api_token),
+        'HANDLE_DESCRIPTION': partial(handle_description, ep_api_token=ep_api_token),
+        'WAITING_EMAIL':  partial(waiting_email, ep_api_token=ep_api_token),
     }
     state_handler = states_functions[user_state]
     try:
@@ -206,6 +206,7 @@ def actual_token(ep_client, ep_secret):
         }
         logger.warning(f"Новый токен: {api_token}")
     return api_token['token']
+
 
 if __name__ == '__main__':
     dotenv.load_dotenv()
