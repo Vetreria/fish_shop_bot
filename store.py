@@ -22,8 +22,7 @@ def fetch_api_token(ep_client, ep_secret):
     response = requests.post(
         'https://api.moltin.com/oauth/access_token', data=data)
     response.raise_for_status()
-    print(response.json())
-    return response.json()
+    return response.json()['token_type'], response.json()['access_token'], response.json()['expires_in']
 
 
 def add_to_cart(ep_api_token, item_id, quantity, cart_id):
@@ -114,11 +113,6 @@ def create_customer(ep_api_token, user_name, user_email):
 
 def main():
     dotenv.load_dotenv()
-    ep_store = os.environ["ELASTIC_STORE_ID"]
-    ep_client = os.environ["ELASTIC_CLIENT_ID"]
-    ep_secret = os.environ["ELASTIC_CLIENT_SECRET"]
-    ep_api_token_result = fetch_api_token(ep_client, ep_secret)
-    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
 
 
 if __name__ == "__main__":

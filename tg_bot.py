@@ -1,5 +1,6 @@
 import os
 from functools import partial
+from datetime import timedelta, datetime
 import logging
 import redis
 import dotenv
@@ -13,6 +14,7 @@ from logger import set_logger
 logger = logging.getLogger(__name__)
 
 _database = None
+api_token = {}
 
 
 def make_products_keyboard(ep_api_token):
@@ -141,7 +143,7 @@ def handle_menu(update, context, ep_api_token):
 
 def handle_users_reply(update, context):
     db = get_database_connection()
-    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
+    ep_api_token = actual_token(ep_client, ep_secret)
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -186,15 +188,24 @@ def waiting_email(update, context, ep_api_token):
 def get_database_connection():
     global _database
     if _database is None:
-        # database_password = os.getenv("DATABASE_PASSWORD")
         database_host = os.getenv("DATABASE_HOST")
         database_port = os.getenv("DATABASE_PORT")
         _database = redis.Redis(
             host=database_host, port=database_port,
-            #  password=database_password
         )
     return _database
 
+
+def actual_token(ep_client, ep_secret):
+    global api_token
+    if not api_token or datetime.now() > api_token['expires_at']:
+        token_type, token, expires_in = fetch_api_token(ep_client, ep_secret)
+        api_token = {
+            'token': f"{token_type} {token}",
+            'expires_at': datetime.now() + timedelta(seconds=expires_in),
+        }
+        logger.warning(f"Новый токен: {api_token}")
+    return api_token['token']
 
 if __name__ == '__main__':
     dotenv.load_dotenv()
@@ -208,8 +219,7 @@ if __name__ == '__main__':
     set_logger(logger, log_tg_bot, chat_id)
     logger.warning("Бот запустился")
 
-    ep_api_token_result = fetch_api_token(ep_client, ep_secret)
-    ep_api_token = f"{ep_api_token_result['token_type']} {ep_api_token_result['access_token']}"
+    ep_api_token = actual_token(ep_client, ep_secret)
     updater = Updater(token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
