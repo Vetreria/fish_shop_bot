@@ -1,6 +1,4 @@
-import os
 import requests
-import dotenv
 
 
 def get_image_url(ep_api_token, image_id):
@@ -109,11 +107,3 @@ def create_customer(ep_api_token, user_name, user_email):
     Name(tg_chat): {response.json()['data']['name']}
     email: {response.json()['data']['email']}
     """)
-
-
-def main():
-    dotenv.load_dotenv()
-
-
-if __name__ == "__main__":
-    main()

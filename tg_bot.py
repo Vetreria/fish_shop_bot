@@ -143,7 +143,7 @@ def handle_menu(update, context, ep_api_token):
 
 def handle_users_reply(update, context):
     db = get_database_connection()
-    ep_api_token = actual_token(ep_client, ep_secret)
+    ep_api_token = update_token(ep_client, ep_secret)
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -196,7 +196,7 @@ def get_database_connection():
     return _database
 
 
-def actual_token(ep_client, ep_secret):
+def update_token(ep_client, ep_secret):
     global api_token
     if not api_token or datetime.now() > api_token['expires_at']:
         token_type, token, expires_in = fetch_api_token(ep_client, ep_secret)
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     set_logger(logger, log_tg_bot, chat_id)
     logger.warning("Бот запустился")
 
-    ep_api_token = actual_token(ep_client, ep_secret)
+    ep_api_token = update_token(ep_client, ep_secret)
     updater = Updater(token)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
